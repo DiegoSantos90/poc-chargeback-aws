@@ -1,0 +1,58 @@
+[
+  {
+    "transaction_id": "TXN001",
+    "card_number": "****1234",
+    "amount": 150.00,
+    "currency": "USD",
+    "merchant_id": "MERCH001",
+    "merchant_name": "Online Store ABC",
+    "transaction_date": "2024-01-15T10:30:00Z",
+    "chargeback_reason": "Unauthorized transaction",
+    "chargeback_amount": 150.00,
+    "dispute_date": "2024-01-20T14:25:00Z",
+    "case_number": "CB2024001",
+    "status": "pending"
+  },
+  {
+    "transaction_id": "TXN002",
+    "card_number": "****5678",
+    "amount": 75.50,
+    "currency": "USD",
+    "merchant_id": "MERCH002",
+    "merchant_name": "Restaurant XYZ",
+    "transaction_date": "2024-01-14T18:45:00Z",
+    "chargeback_reason": "Duplicate processing",
+    "chargeback_amount": 75.50,
+    "dispute_date": "2024-01-21T09:15:00Z",
+    "case_number": "CB2024002",
+    "status": "pending"
+  },
+  {
+    "transaction_id": "TXN003",
+    "card_number": "****9012",
+    "amount": 299.99,
+    "currency": "USD",
+    "merchant_id": "MERCH003",
+    "merchant_name": "Electronics Store DEF",
+    "transaction_date": "2024-01-13T12:20:00Z",
+    "chargeback_reason": "Product not received",
+    "chargeback_amount": 299.99,
+    "dispute_date": "2024-01-22T16:30:00Z",
+    "case_number": "CB2024003",
+    "status": "pending"
+  },
+  {
+    "transaction_id": "TXN004",
+    "card_number": "****3456",
+    "amount": 45.75,
+    "currency": "USD",
+    "merchant_id": "MERCH001",
+    "merchant_name": "Online Store ABC",
+    "transaction_date": "2024-01-16T08:15:00Z",
+    "chargeback_reason": "Cancelled recurring transaction",
+    "chargeback_amount": 45.75,
+    "dispute_date": "2024-01-23T11:40:00Z",
+    "case_number": "CB2024004",
+    "status": "pending"
+  }
+]
