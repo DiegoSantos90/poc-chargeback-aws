@@ -35,3 +35,11 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Lambda function zip files
+lambda_functions/*.zip
