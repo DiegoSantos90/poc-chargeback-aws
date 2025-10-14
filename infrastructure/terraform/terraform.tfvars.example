@@ -1,0 +1,24 @@
+# Example configuration for terraform.tfvars
+# Copy this file to terraform.tfvars and adjust as needed
+
+# Project name (will be used as prefix in resources)
+project_name = "poc-chargeback"
+
+# Environment (dev, staging, prod)
+environment = "dev"
+
+# AWS region where resources will be created
+aws_region = "us-east-1"
+
+# CIDR block for VPC (private network)
+vpc_cidr = "10.0.0.0/16"
+
+# Availability zones (must exist in chosen region)
+availability_zones = ["us-east-1a", "us-east-1b"]
+
+# Example for production:
+# project_name = "chargeback-prod"
+# environment = "prod" 
+# aws_region = "us-west-2"
+# vpc_cidr = "10.1.0.0/16"
+# availability_zones = ["us-west-2a", "us-west-2b", "us-west-2c"]
