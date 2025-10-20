@@ -62,3 +62,45 @@ output "aws_region" {
   description = "AWS region where resources are deployed"
   value       = var.aws_region
 }
+
+# ============================================================================
+# Phase 2 Outputs
+# ============================================================================
+
+# API Gateway Outputs
+output "api_gateway_url" {
+  description = "Base URL of the API Gateway"
+  value       = module.phase2.api_gateway_url
+}
+
+output "api_gateway_id" {
+  description = "ID of the API Gateway REST API"
+  value       = module.phase2.api_gateway_id
+}
+
+# Lambda Outputs
+output "lambda_function_name" {
+  description = "Name of the Lambda function"
+  value       = module.phase2.lambda_function_name
+}
+
+output "lambda_function_arn" {
+  description = "ARN of the Lambda function"
+  value       = module.phase2.lambda_function_arn
+}
+
+output "lambda_function_version" {
+  description = "Latest published version of the Lambda function"
+  value       = module.phase2.lambda_function_version
+}
+
+output "lambda_alias_name" {
+  description = "Name of the Lambda alias"
+  value       = module.phase2.lambda_alias_name
+}
+
+# Deployment Summary
+output "deployment_summary" {
+  description = "Summary of the complete deployment"
+  value       = module.phase2.deployment_summary
+}
