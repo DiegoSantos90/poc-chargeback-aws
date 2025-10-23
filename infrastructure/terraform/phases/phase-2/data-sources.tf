@@ -109,7 +109,7 @@ data "aws_region" "current" {
 # A Lambda usará este endpoint para acessar DynamoDB sem sair da VPC
 data "aws_vpc_endpoint" "dynamodb" {
   vpc_id       = data.aws_vpc.phase1_vpc.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
+  service_name = "com.amazonaws.${data.aws_region.current.id}.dynamodb"
   
   # Se este data source falhar, significa que o endpoint não foi criado
   # A Lambda ainda funcionará, mas usará a internet para acessar DynamoDB
@@ -119,7 +119,7 @@ data "aws_vpc_endpoint" "dynamodb" {
 # Similar ao DynamoDB, valida que o endpoint está disponível
 data "aws_vpc_endpoint" "s3" {
   vpc_id       = data.aws_vpc.phase1_vpc.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+  service_name = "com.amazonaws.${data.aws_region.current.id}.s3"
   
   # A Lambda usará este endpoint para acessar S3 sem sair da VPC
 }
