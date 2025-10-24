@@ -1,0 +1,5 @@
+# Ignore JAR files (binary artifacts)
+*.jar
+
+# Keep the directory structure
+!.gitkeep

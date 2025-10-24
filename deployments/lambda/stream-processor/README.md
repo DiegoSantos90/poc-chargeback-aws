@@ -2,20 +2,41 @@
 
 ## 📦 How to Build and Deploy
 
-### 1. Install Dependencies
+### Option 1: Automated Build (Recommended) ✨
+
+Use the build script that handles everything automatically:
 
 ```bash
 cd deployments/lambda/stream-processor
-pip install -r requirements.txt -t .
+./build.sh
 ```
 
-### 2. Create Deployment Package
+**What it does:**
+- ✅ Installs Python dependencies
+- ✅ Creates deployment package (zip)
+- ✅ Cleans up temporary files automatically
+- ✅ Shows package size and next steps
+
+### Option 2: Manual Build
+
+If you prefer to build manually:
 
 ```bash
+cd deployments/lambda/stream-processor
+
+# Install dependencies
+pip install -r requirements.txt -t .
+
+# Create deployment package
 zip -r ../stream-processor.zip .
+
+# Clean up temporary files
+rm -rf kafka/ boto3/ botocore/ aws_msk_iam_sasl_signer/ \
+       dateutil/ urllib3/ s3transfer/ jmespath/ click/ \
+       *.dist-info/ six.py __pycache__/ bin/
 ```
 
-### 3. Deploy via Terraform
+### Deploy via Terraform
 
 The deployment package will be automatically picked up by Terraform:
 
