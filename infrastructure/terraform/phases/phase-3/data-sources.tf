@@ -58,8 +58,8 @@ locals {
   flink_checkpoint_prefix   = "flink/checkpoints/${var.flink_application_name}"
   parquet_output_prefix     = var.s3_landing_prefix
   
-  # Lambda deployment package path
-  lambda_zip_path = "${path.root}/../../deployments/lambda/stream-processor.zip"
+  # Lambda deployment package path (path.root points to where terraform is executed)
+  lambda_zip_path = "${path.module}/../../../../deployments/lambda/stream-processor.zip"
   
   # MSK configuration
   kafka_version = "2.8.1" # Compatible with MSK Serverless
