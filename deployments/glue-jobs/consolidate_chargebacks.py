@@ -66,7 +66,7 @@ args = getResolvedOptions(sys.argv, [
 
 # Optional arguments with defaults
 optional_args = {
-    'EXECUTION_TIME': datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S'),
+    'EXECUTION_TIME': datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%M:%S'),
     'EXECUTION_SEQUENCE': '1',
     'TOTAL_EXECUTIONS': '4',
     'ENABLE_PARTITION_FILTER': 'true',
