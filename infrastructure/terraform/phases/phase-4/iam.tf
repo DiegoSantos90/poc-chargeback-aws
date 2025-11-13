@@ -203,7 +203,7 @@ data "aws_iam_policy_document" "glue_msk_access" {
     ]
     
     resources = [
-      data.aws_msk_cluster.existing[0].arn
+      var.msk_cluster_arn
     ]
   }
   
@@ -220,7 +220,7 @@ data "aws_iam_policy_document" "glue_msk_access" {
     ]
     
     resources = [
-      "arn:aws:kafka:${local.region}:${local.account_id}:topic/${split("/", data.aws_msk_cluster.existing[0].arn)[1]}/*"
+      "arn:aws:kafka:${local.region}:${local.account_id}:topic/${split("/", var.msk_cluster_arn)[1]}/*"
     ]
   }
   
@@ -235,7 +235,7 @@ data "aws_iam_policy_document" "glue_msk_access" {
     ]
     
     resources = [
-      "arn:aws:kafka:${local.region}:${local.account_id}:group/${split("/", data.aws_msk_cluster.existing[0].arn)[1]}/*"
+      "arn:aws:kafka:${local.region}:${local.account_id}:group/${split("/", var.msk_cluster_arn)[1]}/*"
     ]
   }
   

@@ -93,19 +93,9 @@ output "eventbridge_schedulers" {
 }
 
 # -----------------------------------------------------------------------------
-# S3 Path Outputs
+# S3 Path Outputs (defined in data-sources.tf)
 # -----------------------------------------------------------------------------
-
-output "s3_paths" {
-  description = "S3 paths for data and Glue resources"
-  value = {
-    landing_zone    = local.landing_zone_s3_path
-    consolidated    = local.consolidated_s3_path
-    glue_scripts    = local.glue_scripts_s3_path
-    glue_temp       = local.glue_temp_s3_path
-    glue_spark_logs = local.glue_spark_logs_s3_path
-  }
-}
+# Note: output "s3_paths" is defined in data-sources.tf to avoid duplication
 
 # -----------------------------------------------------------------------------
 # IAM Role Outputs

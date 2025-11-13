@@ -1,96 +1,42 @@
 # =============================================================================
 # Phase 4 - Kafka Topic for Consolidation Events
 # =============================================================================
-# This file creates a Kafka topic in the existing MSK cluster (from Phase 3)
-# for consolidation completion events that can be consumed by a Lambda function
-# to update DynamoDB chargeback status.
+# This file creates Kafka topics in the existing MSK cluster (from Phase 3)
+# for both the streaming pipeline and consolidation completion events.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Kafka Topic Creation (using kafka_topic resource or null_resource)
+# Kafka Topic Creation (using kafka_topic resource)
 # -----------------------------------------------------------------------------
 
-# Note: Terraform doesn't have native support for MSK Serverless topics
-# We'll use a null_resource with AWS CLI to create the topic
-# This runs only when Kafka integration is enabled
-
-resource "null_resource" "create_kafka_topic" {
+# Kafka topic for streaming chargeback events (from DynamoDB Streams via Lambda)
+resource "kafka_topic" "chargebacks" {
   count = local.kafka_enabled ? 1 : 0
 
-  triggers = {
-    topic_name        = var.kafka_consolidation_topic
-    partitions        = var.kafka_consolidation_topic_partitions
-    replication       = var.kafka_consolidation_topic_replication
-    bootstrap_servers = var.msk_bootstrap_brokers
-  }
+  name               = "chargebacks"
+  replication_factor = var.kafka_consolidation_topic_replication
+  partitions         = var.kafka_consolidation_topic_partitions
 
-  provisioner "local-exec" {
-    command = <<-EOT
-      # Check if topic exists
-      TOPIC_EXISTS=$(aws kafka list-topics \
-        --cluster-arn ${data.aws_msk_cluster.existing[0].arn} \
-        --region ${local.region} \
-        --query "Topics[?TopicName=='${var.kafka_consolidation_topic}'].TopicName" \
-        --output text 2>/dev/null || echo "")
-
-      if [ -z "$TOPIC_EXISTS" ]; then
-        echo "Creating Kafka topic: ${var.kafka_consolidation_topic}"
-        
-        # Create topic configuration JSON
-        cat > /tmp/kafka-topic-config-${var.kafka_consolidation_topic}.json <<EOF
-{
-  "Name": "${var.kafka_consolidation_topic}",
-  "PartitionsCount": ${var.kafka_consolidation_topic_partitions},
-  "ReplicationFactor": ${var.kafka_consolidation_topic_replication},
-  "TopicConfiguration": {
-    "Configs": [
-      {
-        "Key": "retention.ms",
-        "Value": "604800000"
-      },
-      {
-        "Key": "compression.type",
-        "Value": "snappy"
-      },
-      {
-        "Key": "max.message.bytes",
-        "Value": "1048576"
-      },
-      {
-        "Key": "cleanup.policy",
-        "Value": "delete"
-      }
-    ]
+  config = {
+    "retention.ms"     = "604800000" # 7 days
+    "compression.type" = "snappy"
+    "cleanup.policy"   = "delete"
   }
 }
-EOF
-        
-        # Create topic using AWS CLI (for MSK Serverless)
-        aws kafka create-topic \
-          --cluster-arn ${data.aws_msk_cluster.existing[0].arn} \
-          --region ${local.region} \
-          --cli-input-json file:///tmp/kafka-topic-config-${var.kafka_consolidation_topic}.json
-        
-        echo "Topic ${var.kafka_consolidation_topic} created successfully"
-        rm -f /tmp/kafka-topic-config-${var.kafka_consolidation_topic}.json
-      else
-        echo "Topic ${var.kafka_consolidation_topic} already exists"
-      fi
-    EOT
-  }
 
-  depends_on = [data.aws_msk_cluster.existing]
-}
-
-# -----------------------------------------------------------------------------
-# Data Source: Existing MSK Cluster (from Phase 3)
-# -----------------------------------------------------------------------------
-
-# We need to find the MSK cluster by name to get its ARN
-data "aws_msk_cluster" "existing" {
+# Kafka topic for consolidation completion events (from Glue ETL job)
+resource "kafka_topic" "consolidation_events" {
   count = local.kafka_enabled ? 1 : 0
 
-  cluster_name = "${local.name_prefix}-chargebacks-cluster"
+  name               = var.kafka_consolidation_topic
+  replication_factor = var.kafka_consolidation_topic_replication
+  partitions         = var.kafka_consolidation_topic_partitions
+
+  config = {
+    "retention.ms"     = "604800000" # 7 days
+    "compression.type" = "snappy"
+    "cleanup.policy"   = "delete"
+  }
 }
 
 # -----------------------------------------------------------------------------
@@ -111,32 +57,33 @@ resource "aws_security_group_rule" "glue_to_msk" {
 }
 
 # Security group for Glue connection
+# Security group for Glue connection to MSK
 resource "aws_security_group" "glue" {
-  count = local.kafka_enabled ? 1 : 0
+  count = local.kafka_enabled && var.vpc_id != "" ? 1 : 0
 
-  name_prefix = "${local.name_prefix}-glue-kafka-"
-  description = "Security group for Glue ETL job to access MSK"
+  name        = "${local.name_prefix}-glue-to-msk"
+  description = "Allow Glue ETL jobs to connect to MSK cluster"
   vpc_id      = var.vpc_id
 
   egress {
+    description = "Allow all outbound traffic"
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic"
   }
 
   tags = merge(
     local.common_tags,
     {
-      Name = "${local.name_prefix}-glue-kafka-sg"
+      Name = "${local.name_prefix}-glue-to-msk"
     }
   )
 }
 
 # Self-referencing rule for Glue
 resource "aws_security_group_rule" "glue_self" {
-  count = local.kafka_enabled ? 1 : 0
+  count = local.kafka_enabled && var.vpc_id != "" ? 1 : 0
 
   type                     = "ingress"
   from_port                = 0
@@ -151,6 +98,12 @@ resource "aws_security_group_rule" "glue_self" {
 # Glue Connection for VPC Access (to reach MSK)
 # -----------------------------------------------------------------------------
 
+# Data source for subnet AZ (must be declared before use)
+data "aws_subnet" "private" {
+  count = local.kafka_enabled && length(var.private_subnet_ids) > 0 ? 1 : 0
+  id    = var.private_subnet_ids[0]
+}
+
 resource "aws_glue_connection" "msk" {
   count = local.kafka_enabled && length(var.private_subnet_ids) > 0 ? 1 : 0
 
@@ -158,7 +111,7 @@ resource "aws_glue_connection" "msk" {
 
   connection_properties = {
     KAFKA_BOOTSTRAP_SERVERS = var.msk_bootstrap_brokers
-    KAFKA_SSL_ENABLED       = "false" # IAM auth doesn't use SSL
+    KAFKA_SSL_ENABLED       = "true" # MSK IAM auth requires TLS on port 9098
   }
 
   physical_connection_requirements {
@@ -166,12 +119,6 @@ resource "aws_glue_connection" "msk" {
     security_group_id_list = [aws_security_group.glue[0].id]
     subnet_id              = var.private_subnet_ids[0]
   }
-}
-
-# Data source for subnet AZ
-data "aws_subnet" "private" {
-  count = local.kafka_enabled && length(var.private_subnet_ids) > 0 ? 1 : 0
-  id    = var.private_subnet_ids[0]
 }
 
 # -----------------------------------------------------------------------------

@@ -298,6 +298,13 @@ variable "msk_bootstrap_brokers" {
   # Example: "b-1.msk-cluster.xyz.kafka.us-east-1.amazonaws.com:9098,b-2..."
 }
 
+variable "msk_cluster_arn" {
+  description = "ARN of the MSK cluster from Phase 3"
+  type        = string
+  default     = ""
+  # Example: "arn:aws:kafka:sa-east-1:123456789012:cluster/msk-cluster/uuid"
+}
+
 variable "kafka_consolidation_topic" {
   description = "Kafka topic name for consolidation completion events"
   type        = string
@@ -391,46 +398,4 @@ locals {
 # Validate output files
 locals {
   is_valid_output_files = var.consolidation_output_files >= 1 && var.consolidation_output_files <= 1000
-}
-
-# =============================================================================
-# CALCULATED VALUES
-# =============================================================================
-
-locals {
-  # Calculate schedule interval in hours
-  schedule_interval_hours = 24 / var.consolidation_executions_per_day
-  
-  # Generate schedule times (every N hours, offset by 30 min after crawler)
-  # Example for 4 executions: 0:30, 6:30, 12:30, 18:30
-  schedule_hours = [for i in range(var.consolidation_executions_per_day) : i * local.schedule_interval_hours]
-  
-  # Expected records per execution (for 5M/day target)
-  records_per_execution = 5000000 / var.consolidation_executions_per_day
-  
-  # Expected records per file
-  records_per_file = local.records_per_execution / var.consolidation_output_files
-  
-  # Estimated file size (assume 100 bytes/record with compression)
-  estimated_file_size_mb = (local.records_per_file * 100) / 1024 / 1024
-}
-
-# =============================================================================
-# OUTPUTS FOR DEBUGGING
-# =============================================================================
-
-output "phase4_configuration_summary" {
-  description = "Summary of Phase 4 configuration"
-  value = {
-    executions_per_day      = var.consolidation_executions_per_day
-    schedule_interval_hours = local.schedule_interval_hours
-    schedule_hours          = local.schedule_hours
-    output_files_per_run    = var.consolidation_output_files
-    records_per_execution   = local.records_per_execution
-    records_per_file        = local.records_per_file
-    estimated_file_size_mb  = local.estimated_file_size_mb
-    glue_workers            = var.glue_job_number_of_workers
-    glue_worker_type        = var.glue_job_worker_type
-    total_dpus              = var.glue_job_worker_type == "G.1X" ? var.glue_job_number_of_workers : var.glue_job_number_of_workers * 2
-  }
 }
