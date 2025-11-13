@@ -74,21 +74,18 @@ output "glue_job" {
 
 output "eventbridge_schedulers" {
   description = "EventBridge scheduler information"
-  value = var.enable_scheduler ? {
-    enabled             = true
-    count               = length(aws_scheduler_schedule.glue_consolidation)
-    schedule_names      = aws_scheduler_schedule.glue_consolidation[*].name
-    schedule_arns       = aws_scheduler_schedule.glue_consolidation[*].arn
-    cron_expressions    = local.schedule_cron_expressions
-    timezone            = var.scheduler_timezone
-    executions_per_day  = var.consolidation_executions_per_day
-    execution_times     = [
+  value = {
+    enabled             = var.enable_scheduler
+    count               = var.enable_scheduler ? length(aws_scheduler_schedule.glue_consolidation) : 0
+    schedule_names      = var.enable_scheduler ? aws_scheduler_schedule.glue_consolidation[*].name : []
+    schedule_arns       = var.enable_scheduler ? aws_scheduler_schedule.glue_consolidation[*].arn : []
+    cron_expressions    = var.enable_scheduler ? local.schedule_cron_expressions : []
+    timezone            = var.enable_scheduler ? var.scheduler_timezone : ""
+    executions_per_day  = var.enable_scheduler ? var.consolidation_executions_per_day : 0
+    execution_times     = var.enable_scheduler ? [
       for i in range(var.consolidation_executions_per_day) :
       format("%02d:30", i * local.schedule_interval_hours)
-    ]
-  } : {
-    enabled = false
-    message = "EventBridge Scheduler is disabled. Set enable_scheduler = true to enable."
+    ] : []
   }
 }
 

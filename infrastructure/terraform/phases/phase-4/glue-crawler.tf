@@ -118,7 +118,7 @@ resource "aws_cloudwatch_metric_alarm" "crawler_failure" {
     Type    = "count"
   }
   
-  alarm_actions = var.alarm_email_endpoints != [] ? [aws_sns_topic.glue_alerts[0].arn] : []
+  alarm_actions = var.enable_cloudwatch_alarms && length(var.alarm_email_endpoints) > 0 ? [aws_sns_topic.glue_alerts[0].arn] : []
   
   tags = merge(
     local.common_tags,

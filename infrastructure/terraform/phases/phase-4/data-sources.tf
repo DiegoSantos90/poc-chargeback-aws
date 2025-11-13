@@ -80,7 +80,8 @@ locals {
   file_size_mb            = (local.records_per_file * local.avg_record_size_bytes) / 1024 / 1024
   
   # Kafka/MSK configuration
-  kafka_enabled = var.enable_kafka_notifications && var.msk_bootstrap_brokers != ""
+  # Note: Use only var.enable_kafka_notifications to avoid dependency on Phase 3 outputs during plan
+  kafka_enabled = var.enable_kafka_notifications
   
   # Glue job arguments (passed to PySpark script)
   default_glue_job_arguments = {
