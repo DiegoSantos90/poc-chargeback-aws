@@ -22,3 +22,23 @@ provider "registry.terraform.io/hashicorp/aws" {
     "zh:e37d035fa02693a3d47fe636076cce50b6579b6adc0a36a7cf0456a2331c99ec",
   ]
 }
+
+provider "registry.terraform.io/mongey/kafka" {
+  version     = "0.4.3"
+  constraints = "~> 0.4.0"
+  hashes = [
+    "h1:YBPMEapCLVw11aEHjccmqBdqNGTktP0aUN3qJ2N3OvI=",
+    "zh:306afeb148ac9e238cda56920da3c3b0b5e79eecc72fc835fa079b19371e1976",
+    "zh:5af6b853d683785eee4e9a18d3af2165d05a2b79725fe76f8f46a1ea40588328",
+    "zh:61c41bba9c13a4be0c09619e4127eb7c48cbd782f3cf4206802c17d34a581bcb",
+    "zh:6600cf3563b6a525747596df74d7edfdf1e7d1cdeb47bc0aadb21e66b034ddf2",
+    "zh:85c0dc64a1d04faef2dda3b7f4cd2438f831e7c7afe7a76d3e932277a3707f96",
+    "zh:9e3599dcddfea5d89f06e81f9832481c9606912ace6fb3092a6de8206816617b",
+    "zh:a31a8f094389334bf33704477e4a48eb0284fb52ea1b41642180f7e9919701be",
+    "zh:b17776527f8d15ae40b6d4f26d708868f162d20aa7a7158ca787b6e053d85eaf",
+    "zh:b1dcdf0a4b4f6f7850d7e5130b4b9da429a3c64b7601a530c22e042d713f12c4",
+    "zh:c0336b339ae0ef028b3fe91697d9181b4004f19104a9ad6e4b389690914fa141",
+    "zh:d26cfb5322b109103ee6a538baa24b3d01767d0849d1300acfbcbeeb7f66cc1b",
+    "zh:d6bb04944e306ff86f4b8e292fa671fe7c2a1131f1ccbdc4c46feb1af8d48d8d",
+  ]
+}

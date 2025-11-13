@@ -115,36 +115,9 @@ terraform apply
 - 5+ CloudWatch alarms
 - 1× SQS Dead Letter Queue (optional)
 
-### Step 2: Create Kafka Topic
+### Step 2: Kafka Topics
 
-MSK Serverless doesn't support automatic topic creation via Terraform. Create manually:
-
-**Option A: Using AWS CLI + kafka-topics.sh**
-
-```bash
-# Get MSK bootstrap servers
-BOOTSTRAP=$(terraform output -raw msk_bootstrap_brokers)
-
-# Create client.properties file
-cat > client.properties <<EOF
-security.protocol=SASL_SSL
-sasl.mechanism=AWS_MSK_IAM
-sasl.jaas.config=software.amazon.msk.auth.iam.IAMLoginModule required;
-sasl.client.callback.handler.class=software.amazon.msk.auth.iam.IAMClientCallbackHandler
-EOF
-
-# Create topic (requires Kafka CLI tools installed)
-kafka-topics.sh --bootstrap-server $BOOTSTRAP \
-  --command-config client.properties \
-  --create \
-  --topic chargebacks \
-  --partitions 3 \
-  --replication-factor 3
-```
-
-**Option B: Using Lambda (Automated)**
-
-See PHASE3_README.md section "Automated Topic Creation" for Lambda code.
+Kafka topics (`chargebacks` and `chargeback-consolidation-events`) are now created and managed by Terraform using the `kafka` provider.
 
 ### Step 3: Deploy Lambda Code
 
