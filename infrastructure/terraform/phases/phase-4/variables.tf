@@ -135,12 +135,13 @@ variable "glue_job_max_concurrent_runs" {
 # -----------------------------------------------------------------------------
 
 variable "consolidation_output_files" {
-  description = "Number of consolidated Parquet files to generate per execution (repartition count)"
+  description = "Number of consolidated files to generate per execution (repartition count)"
   type        = number
   default     = 1
-  # For 5M records/day ÷ 4 executions = 1.25M records/execution
-  # For 1 execution: 5M records/execution
-  # Adjust based on file size preference: fewer files = larger files
+  # Default: 1 file per execution
+  # For 5M records/day ÷ 4 executions = 1.25M records per file (~400 MB)
+  # Total daily output: 4 files (1 file × 4 executions)
+  # Increase for smaller files or if you need more parallelism
 }
 
 variable "consolidation_executions_per_day" {
@@ -339,6 +340,47 @@ variable "private_subnet_ids" {
   description = "Private subnet IDs for Glue connection to MSK"
   type        = list(string)
   default     = []
+}
+
+# -----------------------------------------------------------------------------
+# Lambda Consolidation Updater Configuration
+# -----------------------------------------------------------------------------
+
+variable "consolidation_updater_memory_mb" {
+  description = "Lambda memory allocation in MB for consolidation updater"
+  type        = number
+  default     = 256
+  # 256 MB is sufficient for processing 100 Kafka messages
+  # Increase to 512 MB if processing larger batches
+}
+
+variable "consolidation_updater_timeout_seconds" {
+  description = "Lambda timeout in seconds for consolidation updater"
+  type        = number
+  default     = 60
+  # 60 seconds allows for batch DynamoDB updates
+  # Increase if processing large numbers of chargebacks per partition
+}
+
+variable "consolidation_updater_log_level" {
+  description = "Log level for consolidation updater Lambda (DEBUG, INFO, WARN, ERROR)"
+  type        = string
+  default     = "INFO"
+  # Use DEBUG for troubleshooting, INFO for production
+}
+
+variable "enable_consolidation_dlq" {
+  description = "Enable Dead Letter Queue for failed consolidation events"
+  type        = bool
+  default     = true
+  # Recommended: true to capture and retry failed messages
+}
+
+variable "dynamodb_table_name" {
+  description = "Name of the DynamoDB chargebacks table (from Phase 1)"
+  type        = string
+  default     = ""
+  # Example: "poc-chargeback-chargebacks-dev"
 }
 
 # -----------------------------------------------------------------------------
