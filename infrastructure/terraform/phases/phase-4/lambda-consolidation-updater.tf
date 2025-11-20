@@ -428,7 +428,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_errors" {
     FunctionName = aws_lambda_function.consolidation_updater.function_name
   }
   
-  alarm_actions = var.alarm_email_endpoints != [] ? [aws_sns_topic.glue_alerts[0].arn] : []
+  alarm_actions = var.enable_cloudwatch_alarms && length(var.alarm_email_endpoints) > 0 ? [aws_sns_topic.glue_alerts[0].arn] : []
   
   tags = local.common_tags
 }
@@ -451,7 +451,7 @@ resource "aws_cloudwatch_metric_alarm" "lambda_duration" {
     FunctionName = aws_lambda_function.consolidation_updater.function_name
   }
   
-  alarm_actions = var.alarm_email_endpoints != [] ? [aws_sns_topic.glue_alerts[0].arn] : []
+  alarm_actions = var.enable_cloudwatch_alarms && length(var.alarm_email_endpoints) > 0 ? [aws_sns_topic.glue_alerts[0].arn] : []
   
   tags = local.common_tags
 }
@@ -474,7 +474,7 @@ resource "aws_cloudwatch_metric_alarm" "dlq_messages" {
     QueueName = aws_sqs_queue.consolidation_dlq[0].name
   }
   
-  alarm_actions = var.alarm_email_endpoints != [] ? [aws_sns_topic.glue_alerts[0].arn] : []
+  alarm_actions = var.enable_cloudwatch_alarms && length(var.alarm_email_endpoints) > 0 ? [aws_sns_topic.glue_alerts[0].arn] : []
   
   tags = local.common_tags
 }
