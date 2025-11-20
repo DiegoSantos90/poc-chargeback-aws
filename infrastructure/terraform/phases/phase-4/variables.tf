@@ -400,6 +400,14 @@ variable "alarm_email_endpoints" {
   # Example: ["data-team@company.com", "ops@company.com"]
 }
 
+variable "consolidation_log_retention_days" {
+  description = "CloudWatch log retention in days for consolidation updater Lambda"
+  type        = number
+  default     = 7
+  # Common values: 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653
+}
+
+
 # -----------------------------------------------------------------------------
 # Glue Job Arguments (passed to PySpark script)
 # -----------------------------------------------------------------------------
