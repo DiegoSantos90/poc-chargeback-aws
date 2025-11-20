@@ -93,3 +93,60 @@ module "phase3" {
   # Depends on Phase 1 (needs VPC, DynamoDB Stream, S3)
   depends_on = [module.phase1]
 }
+
+# Include Phase 4 infrastructure
+module "phase4" {
+  source = "./phases/phase-4"
+  
+  project_name = var.project_name
+  environment  = var.environment
+  region       = var.aws_region
+  
+  # Import Phase 1 resources (S3 buckets)
+  parquet_bucket_name = module.phase1.parquet_bucket_name
+  parquet_bucket_arn  = module.phase1.parquet_bucket_arn
+  
+  # Import Phase 3 resources (MSK cluster for Kafka notifications)
+  msk_bootstrap_brokers  = module.phase3.msk_bootstrap_brokers
+  msk_cluster_arn        = module.phase3.msk_cluster_arn
+  msk_security_group_id  = module.phase3.msk_security_group_id
+  vpc_id                 = module.phase1.vpc_id
+  private_subnet_ids     = module.phase1.private_subnet_ids
+  
+  # Glue configuration
+  glue_database_name         = "chargeback_data"
+  glue_crawler_name          = "chargebacks-landing-crawler"
+  glue_job_name              = "chargebacks-consolidation"
+  glue_job_worker_type       = "G.1X"
+  glue_job_number_of_workers = 2
+  glue_job_timeout           = 60
+  
+  # Data consolidation configuration
+  consolidation_executions_per_day = 4
+  consolidation_output_files       = 1
+  output_format                    = "csv"
+  
+  # Kafka integration
+  enable_kafka_notifications           = true
+  kafka_consolidation_topic            = "chargeback-consolidation-events"
+  kafka_consolidation_topic_partitions = 3
+  kafka_consolidation_topic_replication = 3
+  
+  # EventBridge scheduler
+  enable_scheduler   = true
+  scheduler_timezone = "America/Sao_Paulo"
+  
+  # CloudWatch monitoring
+  enable_cloudwatch_alarms = true
+  alarm_email_endpoints    = []
+  
+  # Tags
+  tags = {
+    Phase     = "4"
+    ManagedBy = "Terraform"
+    Component = "DataConsolidation"
+  }
+  
+  # Depends on Phase 1 (S3) and Phase 3 (MSK)
+  depends_on = [module.phase1, module.phase3]
+}

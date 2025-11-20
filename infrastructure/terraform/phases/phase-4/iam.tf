@@ -181,7 +181,7 @@ data "aws_iam_policy_document" "glue_cloudwatch_logs" {
 # -----------------------------------------------------------------------------
 
 resource "aws_iam_role_policy" "glue_msk_access" {
-  count = local.kafka_enabled ? 1 : 0
+  count = var.enable_kafka_notifications ? 1 : 0
   
   name   = "${local.glue_iam_role_name}-msk-access"
   role   = aws_iam_role.glue.id
@@ -189,7 +189,7 @@ resource "aws_iam_role_policy" "glue_msk_access" {
 }
 
 data "aws_iam_policy_document" "glue_msk_access" {
-  count = local.kafka_enabled ? 1 : 0
+  count = var.enable_kafka_notifications ? 1 : 0
   
   # Kafka Cluster permissions
   statement {

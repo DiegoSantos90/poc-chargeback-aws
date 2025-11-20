@@ -1,0 +1,4 @@
+# AWS SDK for Python
+# Note: boto3 is included in Lambda runtime, but we pin versions for reproducibility
+boto3>=1.28.0
+botocore>=1.31.0

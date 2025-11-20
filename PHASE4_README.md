@@ -216,21 +216,22 @@ deployments/glue-jobs/
 ```
 Time    | Event                 | Details
 --------|----------------------|------------------------------------------
-00:00   | Crawler Run 1        | Discovers data from 23:00-00:00
-00:30   | ETL Execution 1      | Consolidates ~1.25M records → 10 files
-06:00   | Crawler Run 2        | Discovers data from 00:00-06:00
-06:30   | ETL Execution 2      | Consolidates ~1.25M records → 10 files
-12:00   | Crawler Run 3        | Discovers data from 06:00-12:00
-12:30   | ETL Execution 3      | Consolidates ~1.25M records → 10 files
-18:00   | Crawler Run 4        | Discovers data from 12:00-18:00
-18:30   | ETL Execution 4      | Consolidates ~1.25M records → 10 files
+00:00   | Crawler Run 1        | Discovers data from 18:00-00:00 (6h window)
+00:30   | ETL Execution 1      | Consolidates ~1.25M records → 1 file
+06:00   | Crawler Run 2        | Discovers data from 00:00-06:00 (6h window)
+06:30   | ETL Execution 2      | Consolidates ~1.25M records → 1 file
+12:00   | Crawler Run 3        | Discovers data from 06:00-12:00 (6h window)
+12:30   | ETL Execution 3      | Consolidates ~1.25M records → 1 file
+18:00   | Crawler Run 4        | Discovers data from 12:00-18:00 (6h window)
+18:30   | ETL Execution 4      | Consolidates ~1.25M records → 1 file
 ```
 
 **Daily Summary**:
-- Input: ~10,000+ small files (50 KB each)
-- Output: 40 consolidated files (100 MB each)
-- Total: 5,000,000 records processed
-- Reduction: 250x fewer files
+- **Input**: ~10,000+ small files (50 KB each) from landing zone
+- **Output**: 4 consolidated files total (1 file × 4 executions)
+- **File Size**: ~400 MB each (after consolidation)
+- **Total Records**: 5,000,000 records processed per day
+- **Reduction**: 2,500x fewer files (10,000 → 4)
 
 ## ⚙️ Configuration Parameters
 
@@ -239,7 +240,7 @@ Time    | Event                 | Details
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `consolidation_executions_per_day` | 4 | Number of times to run consolidation (2, 4, 8, 12, 24) |
-| `consolidation_output_files` | 10 | Number of Parquet files per execution |
+| `consolidation_output_files` | 1 | Number of files per execution (1 = single file) |
 | `glue_job_worker_type` | G.1X | Worker size (G.1X, G.2X, G.4X, G.8X) |
 | `glue_job_number_of_workers` | 10 | Number of workers (scale for volume) |
 | `parquet_compression_codec` | snappy | Compression (snappy, gzip, lzo, zstd) |
@@ -307,8 +308,8 @@ Time    | Event                 | Details
 glue_job_worker_type       = "G.1X"
 glue_job_number_of_workers = 10
 consolidation_executions_per_day = 4
-consolidation_output_files = 10
-# Result: 10-15 minutes per execution
+consolidation_output_files = 1
+# Result: 10-15 minutes per execution, 4 files per day
 ```
 
 **For 10 Million Records/Day**:
@@ -316,8 +317,8 @@ consolidation_output_files = 10
 glue_job_worker_type       = "G.2X"  # More powerful workers
 glue_job_number_of_workers = 20      # Double capacity
 consolidation_executions_per_day = 4
-consolidation_output_files = 20
-# Result: 15-20 minutes per execution
+consolidation_output_files = 1       # Still 1 file per execution
+# Result: 15-20 minutes per execution, 4 files per day
 ```
 
 **For Real-Time (Hourly)**:
@@ -325,8 +326,8 @@ consolidation_output_files = 20
 glue_job_worker_type       = "G.1X"
 glue_job_number_of_workers = 5       # Smaller batches
 consolidation_executions_per_day = 24 # Every hour
-consolidation_output_files = 5
-# Result: 5-10 minutes per execution
+consolidation_output_files = 1       # 1 file per hour
+# Result: 5-10 minutes per execution, 24 files per day
 ```
 
 ## 🚀 Deployment Guide
@@ -380,7 +381,7 @@ csv_header    = true
 
 # Consolidation settings
 consolidation_executions_per_day = 4
-consolidation_output_files       = 10
+consolidation_output_files       = 1
 
 # Glue job sizing
 glue_job_worker_type       = "G.1X"
@@ -519,13 +520,13 @@ aws logs tail /aws-glue/jobs/$JOB_NAME \
 ### Test 3: Run with Custom Parameters
 
 ```bash
-# Process specific date
+# Process specific date with custom file count
 aws glue start-job-run \
   --job-name $JOB_NAME \
   --region sa-east-1 \
   --arguments '{
     "--PARTITION_DATE":"2025-11-02",
-    "--OUTPUT_FILE_COUNT":"5"
+    "--OUTPUT_FILE_COUNT":"1"
   }'
 
 # Dry run (no output written)

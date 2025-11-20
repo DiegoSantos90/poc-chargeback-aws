@@ -11,7 +11,7 @@
 
 # Kafka topic for streaming chargeback events (from DynamoDB Streams via Lambda)
 resource "kafka_topic" "chargebacks" {
-  count = local.kafka_enabled ? 1 : 0
+  count = var.enable_kafka_notifications ? 1 : 0
 
   name               = "chargebacks"
   replication_factor = var.kafka_consolidation_topic_replication
@@ -26,7 +26,7 @@ resource "kafka_topic" "chargebacks" {
 
 # Kafka topic for consolidation completion events (from Glue ETL job)
 resource "kafka_topic" "consolidation_events" {
-  count = local.kafka_enabled ? 1 : 0
+  count = var.enable_kafka_notifications ? 1 : 0
 
   name               = var.kafka_consolidation_topic
   replication_factor = var.kafka_consolidation_topic_replication
@@ -45,7 +45,7 @@ resource "kafka_topic" "consolidation_events" {
 
 # Allow Glue to connect to MSK on port 9098 (IAM auth)
 resource "aws_security_group_rule" "glue_to_msk" {
-  count = local.kafka_enabled && var.msk_security_group_id != "" ? 1 : 0
+  count = var.enable_kafka_notifications ? 1 : 0
 
   type                     = "ingress"
   from_port                = 9098
@@ -59,7 +59,7 @@ resource "aws_security_group_rule" "glue_to_msk" {
 # Security group for Glue connection
 # Security group for Glue connection to MSK
 resource "aws_security_group" "glue" {
-  count = local.kafka_enabled && var.vpc_id != "" ? 1 : 0
+  count = var.enable_kafka_notifications ? 1 : 0
 
   name        = "${local.name_prefix}-glue-to-msk"
   description = "Allow Glue ETL jobs to connect to MSK cluster"
@@ -83,7 +83,7 @@ resource "aws_security_group" "glue" {
 
 # Self-referencing rule for Glue
 resource "aws_security_group_rule" "glue_self" {
-  count = local.kafka_enabled && var.vpc_id != "" ? 1 : 0
+  count = var.enable_kafka_notifications ? 1 : 0
 
   type                     = "ingress"
   from_port                = 0
@@ -100,12 +100,12 @@ resource "aws_security_group_rule" "glue_self" {
 
 # Data source for subnet AZ (must be declared before use)
 data "aws_subnet" "private" {
-  count = local.kafka_enabled && length(var.private_subnet_ids) > 0 ? 1 : 0
+  count = var.enable_kafka_notifications && length(var.private_subnet_ids) > 0 ? 1 : 0
   id    = var.private_subnet_ids[0]
 }
 
 resource "aws_glue_connection" "msk" {
-  count = local.kafka_enabled && length(var.private_subnet_ids) > 0 ? 1 : 0
+  count = var.enable_kafka_notifications && length(var.private_subnet_ids) > 0 ? 1 : 0
 
   name = "${local.name_prefix}-msk-connection"
 
